@@ -47,7 +47,7 @@ class BossDBDataset(Dataset):
             image_array = np.load(download_path+task_config['name']+mode+'images.npy')
             mask_array = np.load(download_path+task_config['name']+mode+'labels.npy')
             self.image_array = image_array
-            self.mask_array = mask_array
+            self.mask_array = mask_array.astype(np.int64)
         else:
             self.config = boss_config
 
@@ -109,7 +109,7 @@ class BossDBDataset(Dataset):
                     image_array = np.concatenate((image_array,image_array_temp))
                     mask_array = np.concatenate((mask_array,mask_array_temp))
                     self.image_array = image_array
-                    self.mask_array = mask_array
+                    self.mask_array = mask_array.astype(np.int64)
                     if download:
                         np.save(download_path+task_config['name']+mode+'images.npy', image_array)
                         np.save(download_path+task_config['name']+mode+'labels.npy', mask_array)
@@ -251,18 +251,23 @@ class BossDBDataset(Dataset):
                 x - self.px_radius_x : x + self.px_radius_x,
             ]
         
-        if self.image_transform:
-            image_array = self.image_transform(image_array)
-        if self.mask_transform:
-            mask_array = self.mask_transform(mask_array.astype('int64'))
-            mask_array = torch.squeeze(mask_array)
         if self.z_size>1:
-            image_array = torch.permute(image_array,(1,0,2))
-            image_array = torch.unsqueeze(image_array,0)
-            mask_array = torch.permute(mask_array,(1,0,2))
+            # Transpose to (c, z, x, y)
+            image_array = np.transpose(image_array,(0,2,1))
+            image_array = image_array[np.newaxis, :]
+            mask_array = np.transpose(mask_array,(0,2,1))
         else:
-            image_array = torch.permute(image_array,(1,2,0))
-            mask_array = torch.permute(torch.squeeze(mask_array),(1,0))
+            image_array = np.transpose(image_array,(0,2,1))
+            mask_array = np.transpose(np.squeeze(mask_array),(1,0))
+            # Torch transforms only support 2D images
+            if self.image_transform:
+                image_array = self.image_transform(image_array)
+            if self.mask_transform:
+                mask_array = self.mask_transform(mask_array.astype('int64'))
+                mask_array = torch.squeeze(mask_array)
+            # 2D image_array is of the form C x H x W (channel first)
+        # Effectively integrate torch.ToTensor scaling
+        image_array = torch.Tensor(image_array) / 255.
 
         if self.task1:
             mask_array = self._get_img_label(mask_array)
