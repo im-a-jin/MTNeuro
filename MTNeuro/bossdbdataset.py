@@ -18,10 +18,10 @@ class BossDBDataset(Dataset):
     def __init__(
         self, 
         task_config: dict,
-        boss_config: dict, 
-        mode="train",
-        image_transform=None,
-        mask_transform=None,
+        boss_config = None: dict,
+        mode = "train",
+        image_transform = None,
+        mask_transform = None,
         retries = 5,
         download = True,
         download_path = './'
@@ -43,6 +43,10 @@ class BossDBDataset(Dataset):
             -
         """
         #Calculate the centroids for the slices along x and y for the cortex region. 
+        if image_transform is not None or mask_transform is not None:
+            raise DeprecationWarning("Transforms are being deprecated. Please
+                    remove them from your code.")
+
         x_cor = np.arange(task_config["tile_size"][0]/2, task_config["xrange_cor"][1]-task_config["xrange_cor"][0] ,task_config["tile_size"][0])
         y_cor = np.arange(task_config["tile_size"][1]/2, task_config["yrange_cor"][1]-task_config["yrange_cor"][0] ,task_config["tile_size"][1])
 
@@ -252,8 +256,6 @@ class BossDBDataset(Dataset):
         rad_x = int(task_config["tile_size"][0]/2)
         self.px_radius_y = rad_y
         self.px_radius_x = rad_x
-        self.image_transform = image_transform
-        self.mask_transform = mask_transform
         self.z_size = task_config["volume_z"]
         if 'combine_ax_and_bg' in task_config and bool(task_config['combine_ax_and_bg']):
             self.combine_ax_and_bg = 1
@@ -272,17 +274,9 @@ class BossDBDataset(Dataset):
             label: Image labels processed for Task 1.
         """
         roi_label = torch.mode(mask.flatten())[0]
-        if roi_label == 1 or roi_label == 0:
-            img_label = 0
-        elif roi_label == 2 or roi_label == 8:
-            img_label = 1
-        elif roi_label == 3 or roi_label == 4:
-            img_label = 2
-        elif roi_label == 5 or roi_label == 6 or roi_label == 7:
-            img_label = 3
-        label = torch.LongTensor(0)
-        label = img_label
-        return label
+        label_map = torch.Tensor([0, 0, 1, 2, 2, 3, 3, 3, 1])
+        img_label = label_map[roi_label]
+        return img_label
 
     def __getitem__(self, key):
         """
@@ -311,28 +305,21 @@ class BossDBDataset(Dataset):
                 y - self.px_radius_y : y + self.px_radius_y,
                 x - self.px_radius_x : x + self.px_radius_x,
             ]
-       
-        #If some transform has been specified
-        if self.image_transform:
-            image_array = self.image_transform(image_array)
-        #If some mask transform has been specified
-        if self.mask_transform:
-            mask_array = self.mask_transform(mask_array.astype('int64'))
-            mask_array = torch.squeeze(mask_array)
-        #If it's 3D volumes instead of slices
-        if self.z_size>1:
-            image_array = torch.permute(image_array,(1,0,2))
-            image_array = torch.unsqueeze(image_array,0)
-            mask_array = torch.permute(mask_array,(1,0,2))
-        #If it's 2D slices
-        else:
-            image_array = torch.permute(image_array,(1,2,0))
-            mask_array = torch.permute(torch.squeeze(mask_array),(1,0))
-        #If it's task 1
+        
+        # Transpose to (c, z, x, y) and add channel to image_array
+        image_array = np.transpose(image_array,(0,2,1))[np.newaxis, :]
+        mask_array = np.transpose(mask_array,(0,2,1))
+        if self.z_size==1:
+            # Squeeze z-axis for shape (c, x, y)
+            image_array = np.squeeze(image_array, axis=1)
+            mask_array = np.squeeze(mask_array, axis=0)
+        image_array = torch.FloatTensor(image_array) / 255.
+        mask_array = torch.LongTensor(mask_array)
+
         if self.task1:
             mask_array = self._get_img_label(mask_array)
 
-        #If it is set in the task config to combine the axons and the background labels then do it.
+        # If it is set in the task config to combine the axons and the background labels then do it.
         if self.combine_ax_and_bg:
             threeclass_mask_array = np.where(mask_array==3, 0, mask_array)
             return image_array, threeclass_mask_array
