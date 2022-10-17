@@ -12,9 +12,8 @@ from intern.resource.boss.resource import *
 
 def extract_cell_stats(anno_data):
 
-
-    anno_data[anno_data != 2] = 0
-    labels_in = anno_data
+    labels_in = np.copy(anno_data)
+    labels_in[labels_in != 2] = 0
     
     connectivity = 6 # only 4,8 (2D) and 26, 18, and 6 (3D) are allowed
     labels_out = cc3d.connected_components(labels_in, connectivity=connectivity)
@@ -84,13 +83,13 @@ def extract_cell_stats(anno_data):
 
     cols=["Image Number","Number of Cells", "Avg Distance to NN", "Avg Distance to 3rd NN", "Avg Cell Size","Cell Pixel count"]
     stats_c = pd.DataFrame(data=CellStatsList, columns=cols)     
-    return stats_c.to_numpy()
+    return stats_c
     
     
 def extract_axon_stats(anno_data):
 
-    anno_data[anno_data != 3] = 0
-    labels_out = anno_data
+    labels_out = np.copy(anno_data)
+    labels_out[labels_out != 3] = 0
 
     samples, _, imsize = anno_data.shape
     csize = int(imsize/2)
@@ -107,26 +106,24 @@ def extract_axon_stats(anno_data):
         else:
             labels[i] = labels_out[slice_id, -csize:, -csize:]
             
-    anno_data = labels
-    
     AxonStatsList = np.zeros((4*samples,2))
     for j in range(4*samples):
 
-        props =  measure.regionprops(anno_data[j])      
+        props =  measure.regionprops(labels[j])      
         AxonStatsList[j,0] = j + 1
         if len(props) > 0:
-            AxonStatsList[j,1] = (props[0].area)/(anno_data[j].size)*100
+            AxonStatsList[j,1] = (props[0].area)/(labels[j].size)*100
 
 
     cols=["Image Number","Percent of Pixels"]
     axon_stats_c = pd.DataFrame(data=AxonStatsList, columns=cols)    
-    return axon_stats_c.to_numpy()
+    return axon_stats_c
     
     
 def extract_blood_stats(anno_data):
 
-    anno_data[anno_data != 1] = 0
-    labels_out = anno_data
+    labels_out = np.copy(anno_data)
+    labels_out[labels_out != 1] = 0
 
     samples, _, imsize = anno_data.shape
     csize = int(imsize/2)
@@ -143,18 +140,16 @@ def extract_blood_stats(anno_data):
         else:
             labels[i] = labels_out[slice_id, -csize:, -csize:]
             
-    anno_data = labels
-    
     BloodStatsList = np.zeros((4*samples,2))
     for k in range(4*samples):
-        props =  measure.regionprops(anno_data[k])
+        props =  measure.regionprops(labels[k])
         BloodStatsList[k,0] = k + 1
 
-        BloodStatsList[k,1]= (props[0].area)/(anno_data[k].size)*100
+        BloodStatsList[k,1]= (props[0].area)/(labels[k].size)*100
 
     cols=["Image Number","Percent of Pixels"]
     blood_stats_c = pd.DataFrame(data=BloodStatsList, columns=cols)
-    return blood_stats_c.to_numpy()
+    return blood_stats_c
     
     
 def extract_features(xrange, yrange, zrange, name='region', save=True):
