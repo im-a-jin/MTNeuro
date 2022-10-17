@@ -15,7 +15,7 @@
     "xrange_zi": [1543,1799],
     "yrange_zi": [650,906],
 
-    "z_train": [110, 379],
+    "z_train": [110, 470],
     "z_val": [380, 409],    
     "z_test": [420, 470],
     "volume_z": 1,
@@ -24,6 +24,8 @@
     
     "task_type": "normal",
     "combine_ax_and_bg": 0,
-    "noZI": 0
-     
+    "noZI": 0,
+
+    "encoder_type": "ssl",
+    "encoder_path": "weights.pt"
 }
