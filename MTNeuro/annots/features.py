@@ -83,7 +83,7 @@ def extract_cell_stats(anno_data):
 
     cols=["Image Number","Number of Cells", "Avg Distance to NN", "Avg Distance to 3rd NN", "Avg Cell Size","Cell Pixel count"]
     stats_c = pd.DataFrame(data=CellStatsList, columns=cols)     
-    return stats_c.to_numpy()
+    return stats_c
     
     
 def extract_axon_stats(anno_data):
@@ -117,7 +117,7 @@ def extract_axon_stats(anno_data):
 
     cols=["Image Number","Percent of Pixels"]
     axon_stats_c = pd.DataFrame(data=AxonStatsList, columns=cols)    
-    return axon_stats_c.to_numpy()
+    return axon_stats_c
     
     
 def extract_blood_stats(anno_data):
@@ -149,7 +149,7 @@ def extract_blood_stats(anno_data):
 
     cols=["Image Number","Percent of Pixels"]
     blood_stats_c = pd.DataFrame(data=BloodStatsList, columns=cols)
-    return blood_stats_c.to_numpy()
+    return blood_stats_c
     
     
 def extract_features(xrange, yrange, zrange, name='region', save=True):
