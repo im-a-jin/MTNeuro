@@ -18,7 +18,7 @@ class BossDBDataset(Dataset):
     def __init__(
         self, 
         task_config: dict,
-        boss_config = None: dict,
+        boss_config: dict = None,
         mode = "train",
         image_transform = None,
         mask_transform = None,
@@ -44,8 +44,7 @@ class BossDBDataset(Dataset):
         """
         #Calculate the centroids for the slices along x and y for the cortex region. 
         if image_transform is not None or mask_transform is not None:
-            raise DeprecationWarning("Transforms are being deprecated. Please
-                    remove them from your code.")
+            raise DeprecationWarning("Transforms are being deprecated. Please remove them from your code.")
 
         x_cor = np.arange(task_config["tile_size"][0]/2, task_config["xrange_cor"][1]-task_config["xrange_cor"][0] ,task_config["tile_size"][0])
         y_cor = np.arange(task_config["tile_size"][1]/2, task_config["yrange_cor"][1]-task_config["yrange_cor"][0] ,task_config["tile_size"][1])
