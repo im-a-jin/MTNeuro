@@ -28,7 +28,9 @@ def get_latents(cut_out_data,encoder_file_path,ssl=1):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     encoder = resnet_xray('resnet18').to(device)
     if ssl == 1:
-        ckpt_epoch = BYOLTrainer.load_trained_encoder(encoder, ckpt_path=encoder_file_path, device=device)
+        ckpt_epoch = BYOLTrainer.load_trained_encoder(encoder, ckpt_path=
+                                                      encoder_file_path,
+                                                      device=device)
     encoder.eval()
     test_targets = []
     test_embeddings = torch.zeros((0, encoder.representation_size), dtype=torch.float32)
