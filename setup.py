@@ -14,6 +14,7 @@ setup(
         "numpy",
         "matplotlib",
         "scikit-learn",
+        "scikit-image",
         "tqdm",
         "Pillow",
         "intern",
@@ -28,6 +29,9 @@ setup(
         "einops",
         "kornia==0.4.1",
         "connected-components-3d",
+        "seaborn",
+        "tensorboard",
+        "pyrsistent",
         "segmentation-models-pytorch @ https://github.com/qubvel/segmentation_models.pytorch/archive/740dab561ccf54a9ae4bb5bda3b8b18df3790025.zip#egg=segmentation-models-pytorch-0.3.0-dev"
     ],
     zip_safe=True,
